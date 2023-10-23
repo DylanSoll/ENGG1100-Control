@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE BT Test</title>
+    <!--<script type = "text/javascript" src = "static/js/BT_conn.js"></script>-->
+    <link href = "../static/css/styles.css" rel = "stylesheet">
+    <link href = "../static/css/dark_mode_css.css" rel = "stylesheet">
+    <script src="../static/js/main.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+
+</head>
+<body>
+  <div class="d-flex justify-content-center">
+    <div>Currently connected to: <span id = "current_connection">N/A</span></div>
+
+  </div>
+  <div class="d-flex justify-content-center">
+    <div class="btn-group" role="group">
+      <button type="button" class="btn btn-info" id = "connect">Connect</button>
+      <div class="btn-group" role="group">
+        <button id="connect-dropdown" type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown"></button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" id = "conn-to-all">Scan all</a>
+          <a class="dropdown-item" id = "clear-connect">Clear and Connect</a>
+        </div>
+      </div>
+    </div>
+    <button id="disconnect" class = "btn btn-danger">Disconnect</button>
+    <button id="clear-ble" class = "btn btn-danger">Clear</button>
+  </div>
+  <!--<div class="d-flex justify-content-center">Latency: <span id = "current_latency">-1</span>ms</div>-->
+
+    <br>    
+    <div class="d-flex justify-content-center">
+      <form>
+        <label for="vangle" class="form-label">Vertical Angle: <span id = "vangle-value">90</span>/180</label>
+        <input type="range" class="form-range" id="vangle" min="0" max="180" value="90" step="1">
+        <label for="hangle" class="form-label">Horizontal Angle: <span id = "hangle-value">90</span>/180</label>
+        <input type="range" class="form-range" id="hangle" min="0" max="180" value="90" step="1">
+      </form>   
+    </div>
+    <div class="d-flex justify-content-center">
+      <div style = "display: grid; grid-template-columns: auto auto;">
+        <button id="forward" class="btn btn-primary" onmousedown="console.log">Forward</button>
+        <button id="estop" class="btn btn-danger">E-stop</button>
+
+        <button id="reverse" class="btn btn-primary">Reverese</button>
+        <button id="pump"  class="btn btn-success">Pump</button> 
+      </div>
+        
+        
+    </div>
+    <div class="d-flex justify-content-center">
+      <form>
+        <label for="drive-speed" class="form-label">Drive Speed: <span id = "drive-speed-value">200</span>/255</label>
+        <input type="range" class="form-range" id="drive-speed" min="1" max="255" value="200" step="1">
+
+        <label for="pump-speed" class="form-label">Pump Speed: <span id = "pump-speed-value">200</span>/255</label>
+        <input type="range" class="form-range" id="pump-speed" min="1" max="255" value="200" step="1">
+      </form>   
+    </div>
+    <div class="d-flex justify-content-center">
+      <div style="flex-wrap: wrap;">
+        <button class = "btn btn-secondary" id = "f_drive">Front Wheel Drive</button>
+        <button class = "btn btn-success" id = "r_drive" style = "border: 2px solid white;" >Rear Wheel Drive</button>
+        <button class = "btn btn-secondary" id = "4_drive">Four Wheel Drive</button>
+        <button type="button" class="btn btn-info" id = "advanced_settings_btn" data-bs-toggle="modal" data-bs-target="#advanced_settings_modal">
+          Advanced
+        </button>
+      </div>
+
+    </div>
+
+    
+    <!-- Modal -->
+  <div class="modal fade" id="advanced_settings_modal" tabindex="-1" aria-labelledby="advancedSettingsModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="advanced_settings_modal">Advanced Options</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="fl_wheel_activate">
+            <label class="form-check-label" for="fl_wheel_activate">Front Left</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="bl_wheel_activate" checked = "">
+            <label class="form-check-label" for="bl_wheel_activate">Back Left</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="fr_wheel_activate">
+            <label class="form-check-label" for="fr_wheel_activate">Front Right</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="br_wheel_activate" checked = "">
+            <label class="form-check-label" for="br_wheel_activate">Back Right</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="allow_turning">
+            <label class="form-check-label" for="allow_turning">Can Turn</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+</div>
+      
+</body>
+</html>

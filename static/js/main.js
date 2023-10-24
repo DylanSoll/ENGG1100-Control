@@ -19,7 +19,7 @@ const connectButton = document.getElementById("connect");
 const connectToAnyButton = document.getElementById("conn-to-all");
 const disconnectButton = document.getElementById("disconnect");
 const turnControl = document.getElementById("allow_turning");
-
+const moreButtons = document.getElementById("more_buttons");
 const front_drive_button = document.getElementById("f_drive");
 const rear_drive_button = document.getElementById("r_drive");
 const four_drive_button = document.getElementById("4_drive");
@@ -27,13 +27,42 @@ const fl_wheel_activate = document.getElementById("fl_wheel_activate");
 const fr_wheel_activate = document.getElementById("fr_wheel_activate");
 const bl_wheel_activate = document.getElementById("bl_wheel_activate");
 const br_wheel_activate = document.getElementById("br_wheel_activate");
-const advanced_drive_btn = document.getElementById("advanced_settings_btn")
+const advanced_drive_btn = document.getElementById("advanced_settings_btn");
+const currConnSpan = document.getElementById("current_connection");
+const moreButtonsDiv = document.getElementById("more-buttons-div");
+const headingBtns = {
+  left2: document.getElementById("left2"),
+  left1: document.getElementById("left1"),
+  straight: document.getElementById("straight"),
+  right1: document.getElementById("right1"),
+  right2: document.getElementById("right2"),
+  settings: {
+    turningAllowed: false,
+    shown: false,
+    active: document.getElementById("straight")
+  }
+}
 const forwardVal = 0;
 const reverseVal = forwardVal ? 0 : 1;
+const leftTurnMod = 1;
+const rightTurnMod = leftTurnMod === 1 ? -1 : 1
+
+const headingBtnsValMap = {
+  left2: leftTurnMod * 2,
+  left1: leftTurnMod * 1,
+  straight: 0,
+  right1: rightTurnMod * 1,
+  right2: rightTurnMod * 2
+}
+
 const drive_wheel_modes = {
   front: {fl: 1, fr: 1, bl: 0, br: 0},
   rear: {fl: 0, fr: 0, bl: 1, br: 1},
   four: {fl: 1, fr: 1, bl: 1, br: 1},
+  left1: {fl: 0, fr: 0, bl: 0, br: 1},
+  left2: {fl: 0, fr: 1, bl: 0, br: 1},
+  right1: {fl: 0, fr: 0, bl: 1, br: 0},
+  right2: {fl: 1, fr: 0, bl: 1, br: 0}
 }
 
 const drive_buttons = [front_drive_button, rear_drive_button, four_drive_button, advanced_drive_btn]
@@ -65,6 +94,7 @@ class BluetoothHandler{
         then(device => {
           this.device = device;
           this.deviceName = device?.name === undefined ? "N/A" : this.device?.name;
+          this.updateConnName(this.deviceName)
           this.device.addEventListener('gattserverdisconnected', this.handleDisconnection);
           return this.device;
         });
@@ -72,6 +102,7 @@ class BluetoothHandler{
   handleDisconnection(event) {
     let device = event.target;
     console.log(`"${device.name}" disconnected -- trying to reconnect`);
+    this.updateConnName()
     this.connectDeviceAndCacheCharacteristic(device).
         then(this.startNotifications).
         catch(console.warn);
@@ -147,6 +178,12 @@ class BluetoothHandler{
   clearAndConnect(filtered = true) {
     this.clear();
     this.connect(filtered)
+  }
+  updateConnName(new_name = null){
+    if (new_name === null){
+      new_name = "N/A"
+    }
+    currConnSpan.innerText = new_name === null ? "N/A" : new_name;
   }
 }
 
@@ -253,13 +290,11 @@ class DataHandler{
     this.trySend();
   }
   getModDriveDirection(){
-    var wheel_config_arr = [this.drive.direction, this.drive.active_wheels.fl, this.drive.active_wheels.fr, this.drive.active_wheels.bl, this.drive.active_wheels.br];
+    var wheel_config_arr = [this.drive.direction, this.drive.active_wheels.fr, this.drive.active_wheels.fl, this.drive.active_wheels.bl, this.drive.active_wheels.br];
     if (this.drive.turning.allowed && this.drive.turning.heading){
-      if (this.drive.turning.heading == 1){
-        wheel_config_arr = [this.drive.direction, 1, 0, 1, 0]
-      }else if (this.drive.turning.heading == -1){
-        wheel_config_arr = [this.drive.direction, 0, 1, 0, 1]
-      }
+      const targetHeading = this.drive.turning.heading;
+      const turningMode = drive_wheel_modes[targetHeading > 0 ? (targetHeading === 1 ? "right1" : "right2") : (targetHeading === -1 ? "left1" : "left2")];
+      wheel_config_arr = [this.drive.direction, turningMode.fr, turningMode.fl, turningMode.bl, turningMode.br];
     }
     return wheel_config_arr.reduce((accum, curr, index) => {
       return accum + curr * (2 ** (index))
@@ -445,6 +480,10 @@ clearBLEBtn.addEventListener("touchend", e=> {
   dataController.clearBLE();
 });
 rebootConnBtn.addEventListener("mouseup", e=> {
+  speedSlider.setAttribute("value", "200");
+  pumpSlider.setAttribute("value", "200");
+  hangleSlider.setAttribute("value", "90");
+  vangleSlider.setAttribute("value", "90");
   dataController = new DataHandler();
   dataController.clearAndReconn(true);
 });
@@ -582,16 +621,83 @@ bl_wheel_activate.addEventListener("input", (e)=>{
 br_wheel_activate.addEventListener("input", (e)=>{
   handle_custom_wheel_activation("br");
 });
-
+function handleSelected(newSelected = null){
+  if (newSelected !== null){
+    headingBtns.settings.active = newSelected;
+  }
+  Object.entries(headingBtns).forEach(entry=>{
+    if (entry[1].id == headingBtns.settings.active.id){
+      entry[1].style ="border: 2px solid white;";
+      dataController.drive.turning.heading = headingBtnsValMap[entry[0]];
+    }else{
+      entry[1].style ="border: 1px solid transparent;";
+    }
+  });  
+}
+function handleEnableTurning(){
+  headingBtns.settings.active = headingBtns.straight;
+  if (headingBtns.settings.shown){
+    if (headingBtns.settings.turningAllowed){
+      Object.entries(headingBtns).forEach(entry=>{
+        if (entry[0] != "settings"){
+          entry[1].removeAttribute("disabled");
+          entry[1].removeAttribute("hidden");
+        }
+      });
+    }else{
+      Object.entries(headingBtns).forEach(entry=>{
+        if (entry[0] != "settings"){
+          entry[1].setAttribute("disabled", true);
+          entry[1].removeAttribute("hidden");
+        }
+      });
+    }
+    
+  }else{
+    Object.entries(headingBtns).forEach(entry=>{
+      if (entry[0] != "settings"){
+        entry[1].setAttribute("disabled", true);
+        entry[1].setAttribute("hidden", true);
+      }
+    });
+  };
+  handleSelected()
+}
+Object.entries(headingBtns).forEach(entry => {
+  if (entry[0] != "settings"){
+    entry[1].addEventListener("mouseup", (e)=>{
+      handleSelected(entry[1]);
+    });
+    entry[1].addEventListener("touchend", (e)=>{
+      handleSelected(entry[1]);
+    });
+  }
+});
 turnControl.addEventListener("input", e=>{
   if (turnControl.hasAttribute("checked")){
     turnControl.removeAttribute("checked");
     dataController.drive.turning.allowed = false;
+    headingBtns.settings.turningAllowed = false;
+    handleEnableTurning()
   }else{
     turnControl.setAttribute("checked", "");
-    //dataController.drive.turning.allowed = true;
+    dataController.drive.turning.allowed = true;
+    headingBtns.settings.turningAllowed = true;
+    handleEnableTurning()
+  };
+});
+moreButtons.addEventListener("input", e=>{
+  if (moreButtonsDiv.hasAttribute("hidden")){
+    moreButtons.setAttribute("checked", "");
+    headingBtns.settings.shown = true;
+    handleEnableTurning();
+  }else{
+    moreButtons.removeAttribute("checked");
+    headingBtns.settings.shown = false;
+    moreButtonsDiv.setAttribute("hidden", true)
+    handleEnableTurning();
   }
-})
+});
 
 function updateAngleSlider(horizontal, newAngle){
   if (0 <= newAngle && newAngle <= 180){
@@ -606,20 +712,24 @@ function updateAngleSlider(horizontal, newAngle){
 }
 function updateAngle(horizontal, newAngle){
   if (0 <= newAngle && newAngle <= 180){
-      dataController.updateAngle(horizontal, newAngle)
       updateAngleSlider(horizontal, newAngle);
+      if (horizontal){
+        dataController.newHorizontalAngle(newAngle)
+      }else{
+        dataController.newVerticalAngle(newAngle)
+      }
   }  
 }
 function incrementUpdateAngle(horizontal, direction, increment){ 
   if (horizontal){
-      var newHangle = hangle + direction * increment;
+      var newHangle = dataController.angles.horizontal + direction * increment;
       if (0 <= newHangle && newHangle <= 180){
-          updateAngle(newHangle);
+          updateAngle(horizontal, newHangle);
       }
   }else{
-      var newVangle = vangle + direction * increment;
+      var newVangle = dataController.angles.vertical + direction * increment;
       if (0 <= newVangle && newVangle <= 180){
-        updateAngle(newVangle);
+        updateAngle(horizontal, newVangle);
       }
   }
 }
@@ -639,12 +749,8 @@ class keyHandler{
     };
     this.incrementModifier = 1
   }
-  incrementAngle(horizontal, direction, ctrlPressed = false){
-    if (ctrlPressed){
-        console.log("implement ctrl angle");//incrementUpdateAngle(horizontal, direction)
-    }else{
-        incrementUpdateAngle(horizontal, direction, 1)
-    }
+  incrementAngle(horizontal, direction){
+    incrementUpdateAngle(horizontal, direction, 1);
   }
   stopIncrement(horizontal, ctrlPressed = false){
     if (ctrlPressed){
@@ -676,13 +782,12 @@ class keyHandler{
         dataController.startDrive(reverseVal);
         break
       case "A":
-        dataController.drive.turning.heading = -1;
+        dataController.drive.turning.heading = leftTurnMod * (e.altKey ? 1 : 2);
         break
       case "D":
-        dataController.drive.turning.heading = 1;
+        dataController.drive.turning.heading = rightTurnMod * (e.altKey ? 1 : 2);
         break
       case " ":
-        console.log("hmm")
         dataController.startPump();
         break
       case "ARROWLEFT":
@@ -720,18 +825,6 @@ class keyHandler{
         break
       case " ":
         dataController.endPump();
-        break
-      case "ARROWLEFT":
-        this.stopIncrement(1);
-        break
-      case "ARROWRIGHT":
-        this.stopIncrement(1);
-        break
-      case "ARROWUP":
-        this.stopIncrement(0);
-        break
-      case "ARROWDOWN":
-        this.stopIncrement(0);
         break
       case "ENTER":
           dataController.stopEstop();

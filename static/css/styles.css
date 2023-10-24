@@ -1,15 +1,5 @@
-#terminal div {
-    color: gray;
-}
-
-#terminal div.out {
-    color: red;
-}
-
-#terminal div.in {
-    color: blue;
-}
-
-#btn{
-    width: 100px
-}
+.btn-heading-sel{
+    border: 2px solid white;
+}.btn-heading{
+    margin: 5px;
+  }

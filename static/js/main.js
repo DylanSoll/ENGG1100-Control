@@ -48,11 +48,11 @@ const leftTurnMod = 1;
 const rightTurnMod = leftTurnMod === 1 ? -1 : 1
 
 const headingBtnsValMap = {
-  left2: leftTurnMod * 2,
-  left1: leftTurnMod * 1,
+  left2: leftTurnMod * 1,
+  left1: leftTurnMod * 2,
   straight: 0,
-  right1: rightTurnMod * 1,
-  right2: rightTurnMod * 2
+  right1: rightTurnMod * 2,
+  right2: rightTurnMod * 1
 }
 
 const drive_wheel_modes = {

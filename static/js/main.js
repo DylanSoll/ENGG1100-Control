@@ -188,13 +188,13 @@ class BluetoothHandler{
 }
 
 class DataHandler{
-  #validateBit = 209
-  constructor(validate_bit = 209, driveSpeed = 200, pumpSpeed = 200, verAngle = 90, horAngle = 90){
+  #validateBit = 0;
+  constructor(validate_bit = 0, driveSpeed = 200, pumpSpeed = 200, verAngle = 90, horAngle = 90){
     this.#validateBit = validate_bit;
     this.unsentData = false;
     this.sendingData = false;
     this.drive_pressed = null;
-    this.bluetooth = new BluetoothHandler(primaryService, primaryCharacteristic)
+    this.bluetooth = new BluetoothHandler(primaryService, primaryCharacteristic);
     this.estop = {
       end: false,
       force: false
@@ -420,11 +420,7 @@ class DataHandler{
   }
   sendFail(e = null){
     console.log(e);
-    console.log(e.message == "GATT operation in progress")
     this.sendingData = true;
-    if (e.message == "GATT operation in progress"){
-      this.sendingData = true;
-    }
   }
   clearBLE(){
     const primService = this.bluetooth.primaryService;
@@ -447,7 +443,7 @@ class DataHandler{
     this.bluetooth.connect(filtered);
   }
 }
-var dataController = new DataHandler();
+var dataController = new DataHandler(validateBitValue);
 
 function clearBLE(){
   dataController.bluetooth.clear();
@@ -593,7 +589,6 @@ four_drive_button.addEventListener("click", (e)=>{
 });
 function handle_custom_wheel_activation(target){
   dataController.drive.active_wheels[target] = -1 * (dataController.drive.active_wheels[target] - 1);
-  console.log(dataController.drive.active_wheels);
   num_active = Object.values(dataController.drive.active_wheels).reduce((accum, curr)=>accum+curr, 0);
   if (num_active === 4){
     activate_drive_mode(four_drive_button.id);
@@ -689,6 +684,7 @@ turnControl.addEventListener("input", e=>{
 moreButtons.addEventListener("input", e=>{
   if (moreButtonsDiv.hasAttribute("hidden")){
     moreButtons.setAttribute("checked", "");
+    moreButtonsDiv.removeAttribute("hidden");
     headingBtns.settings.shown = true;
     handleEnableTurning();
   }else{
@@ -751,11 +747,6 @@ class keyHandler{
   }
   incrementAngle(horizontal, direction){
     incrementUpdateAngle(horizontal, direction, 1);
-  }
-  stopIncrement(horizontal, ctrlPressed = false){
-    if (ctrlPressed){
-        console.log("implement ctrl press");
-    }
   }
   durationToAngleIncrement(duration){
     duration = duration < 0 ? 0 : duration > 1000 ? 1000 : duration;
